@@ -7,7 +7,11 @@ typedef unsigned int u_int32;
 typedef unsigned long u_int64; 
 
 void readFileToBuffer(char* Fname,u_int32** buffer, long* count){
-	FILE *f = fopen(Fname, "rb");
+	FILE *f = fopen(Fname, "rb");	
+	if (f == NULL){
+		printf("Cannot find file %s\n",Fname);
+		exit(1);
+	}
 	fseek(f, 0, SEEK_END);
 	long size = ftell(f);
 	fseek(f, 0, SEEK_SET); 
@@ -136,14 +140,14 @@ int main() {
 	printf("Calculated code: %x (in hex)\n", code);
 	free(buffer);
 	int k=0;
-	char tmp;
+	char tmp[1];
 	while (k==0){
 		printf("Enter filename for validation with %x: ",code);
 		scanf("%s",Fname);
-		testValidity(Fname,code);
+		testValidity(Fname,code);		
 		printf("Again? ");
-		scanf("%c",&tmp);
-		if (tmp == 'N') {
+		scanf("%s",&tmp);
+		if (tmp[0] == 'N') {
 			k=1;
 		}
 	}
