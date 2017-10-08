@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <math.h>
 #include <string.h>
 typedef unsigned short u_short; 
@@ -15,7 +16,7 @@ void readFileToBuffer(char* Fname,u_int32** buffer, long* count){
 	fseek(f, 0, SEEK_END);
 	long size = ftell(f);
 	fseek(f, 0, SEEK_SET); 
-	u_int32* temp = (u_int32*) malloc(size); // malloc an array of u_int32
+	u_int32* temp = (u_int32*) malloc(size); 
 	char bytes[4] = "";
 	char byte;
 	int i =0;
@@ -38,8 +39,14 @@ void readFileToBuffer(char* Fname,u_int32** buffer, long* count){
 }
 
 void getFname(char* Fname,u_int32** buffer, long* count){
-	printf("Enter filename: ");
-	scanf("%s",Fname);
+	
+	while (access(Fname, F_OK) == -1){
+		printf("Enter filename: ");
+		scanf("%s",Fname);
+		if (access(Fname, F_OK) == -1){
+			printf("File does not exist. Please re-enter file name!\n");
+		}
+	}
 	readFileToBuffer(Fname, buffer, count);	
 }
 char* long_to_binary(unsigned long k){//for testing
@@ -58,32 +65,13 @@ u_int32 getCode(u_int32* buffer, int count) {
 	u_int64 ofmask = powl(2, 32);
 	u_int64 temp32 = 0;
 	long pointer = 0;
-	while (buffer[pointer] > 0) {
-		//printf("========================\n");
-		//printf("Total = %s\n",long_to_binary(total));
-		//printf("Total = %x\n",total);
+	while (buffer[pointer] > 0) {		
 		total += (u_int64)(buffer[pointer]);
-		//printf("Added = %s\n",long_to_binary((u_int64)buffer[pointer]));
-		//printf("Added = %x\n",(u_int64)buffer[pointer]);
-		//printf("Equal = %s\n",long_to_binary(total));
-		//printf("Equal = %x\n",total);
-		// handle overflow
 		if ((total & ofmask) != 0){
 			total = (total & rmmask) +1;
-			//printf("Oflow = %s\n", long_to_binary(total));
-			//printf("Oflow = %x\n", total);
 		}
-		//increase pointer 
 		pointer++;
 	}
-	
-/*	printf("flip  = %s\n", long_to_binary(~total));
-*printf("========================\n");
-	printf("Total hex = %x\n",total);
-	printf("32bit hex = %x\n",~total);*/
-	//convert total to code
-	
-	//printf("64 bit = %x\n", total);
 	u_int32 sum = ~((u_int32)total);	
 	return sum;
 }  
@@ -96,26 +84,15 @@ void testValidity(char* Fname, u_int32 code) {
 	u_int64 rmmask = powl(2, 32)-1;
 	u_int64 ofmask = powl(2, 32);
 	long pointer = 0;
-	while ((u_int64)buffer[pointer] > 0) {
-		//printf("========================\n");
-		//printf("Total = %x\n",total);
+	while ((u_int64)buffer[pointer] > 0) {		
 		total += (u_int64)(buffer[pointer]);
-		//printf("Added = %s\n",long_to_binary((u_int64)buffer[pointer]));
-		//printf("Added = %x\n",(u_int64)buffer[pointer]);
-		//printf("Equal = %s\n",long_to_binary(total));
-		//printf("Equal = %x\n",total);
-		// handle overflow
 		if ((total & ofmask) != 0){
 			total = (total & rmmask) +1;
-			//printf("Oflow = %s\n", long_to_binary(total));
-			//printf("Oflow = %x\n", total);
 		}
-		//increase pointer 
 		pointer++;
 	}
 	free(buffer);
 	u_int32 sum = (int)total;
-	//printf("32 bit = %x\n", sum);
 	if (sum + code == rmmask) {
 		printf("Validation: Success!\n");
 	}
@@ -133,9 +110,6 @@ int main() {
 	long count;
 	u_int32* buffer;
 	getFname(Fname,&buffer,&count);
-	//printf("%s\n",Fname);
-	//printf("%s\n",buffer);
-	//printf("%ld\n",count);
 	u_int32 code = getCode(buffer,count);
 	printf("Calculated code: %x (in hex)\n", code);
 	free(buffer);
@@ -144,15 +118,12 @@ int main() {
 	while (k==0){
 		printf("Enter filename for validation with %x: ",code);
 		scanf("%s",Fname);
-		testValidity(Fname,code);		
+		testValidity(Fname,code);
+		k=1;
 		printf("Again? ");
 		scanf("%s",&tmp);
-		if (tmp[0] == 'N') {
-			k=1;
+		if (tmp[0] == 'Y') {
+			k=0;
 		}
-	}
-	/* use code to validate any user-specified file */
-	//getFname(...); 
-	//testValidity(code, Fname);
-	
+	}	
 }	
