@@ -92,8 +92,7 @@ void testValidity(char* Fname, u_int32 code) {
 		pointer++;
 	}
 	free(buffer);
-	u_int32 sum = (int)total;
-	if (sum + code == rmmask) {
+	if ((total + (u_int64)code) == rmmask) {
 		printf("Validation: Success!\n");
 	}
 	else {
@@ -122,7 +121,7 @@ int main() {
 		k=1;
 		printf("Again? ");
 		scanf("%s",&tmp);
-		if (tmp[0] == 'Y') {
+		if (tmp[0] == 'Y' || tmp[0] == 'y') {
 			k=0;
 		}
 	}	
